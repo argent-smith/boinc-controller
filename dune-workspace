@@ -1,0 +1,2 @@
+(lang dune 2.4)
+(context (opam (switch /Users/paul/Development/own/mirage/boinc-controller) (merlin false) (name default)))

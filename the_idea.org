@@ -1,0 +1,26 @@
+TL;DR: here's the crappy idea of the thing
+
+* Ideas and usecases
+
+1. BOINC swarm deployment scenario
+
+   a. user sets the number of crunchers
+   b. controller launches the required number of crunchers
+   c. controller provisions each cruncher with ID, workdir and a GUI RPC port number
+   d. controller stores these data in its database
+   e. controller starts a web server
+   f. controller starts a prometheus reporter for simple statistics
+
+
+2. web server request scenario:
+  * a page requests metric -> controller parses request -> controller queries prometheus
+    -> prometheus returns metrics -> controller displays metrics
+  * a page requests interaction -> controller runs GUI RPC API interactor -> controller displays result
+
+
+Materials:
+
+Controller: the unikernel
+WEB UI: Reason-react SPA
+Cruncher spawning mechanism: k3s/k8s/minikube
+xml lib: xmlm
