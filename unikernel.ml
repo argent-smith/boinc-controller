@@ -7,12 +7,30 @@ module BoincController (Time : Mirage_time.S) (S : Mirage_stack.V4) = struct
   and node_port = 31416
 
   let start _time stack =
-    let _ = C.stack ~instance:(Some (S.tcpv4 stack)) () in
+    let open C.Stack in
+    let stack_option = Some {
+                           instance = S.tcpv4 stack;
+                           node_ip;
+                           node_port
+                         } in
+    let _ = C.stack ~stack_option () in
     let rec loop () =
       let duration = 1 in
-      C.state_ping ~node_ip ~node_port
+      C.state_ping ()
       >>= fun () -> Time.sleep_ns (Duration.of_sec duration)
       >>= fun () -> loop ()
     in
     Lwt.join [loop ()]
 end
+
+(*
+
+module dependency plan
+
+BoincController -> Stack [type stack_info; val connect; val disconnect
+                -> Commands
+                -> CommandA
+                -> ...       -> functor Command (CD : CommandData) -> module type CommandData
+                -> CommandZ
+
+*)

@@ -1,15 +1,23 @@
 open Lwt.Infix
 
 module Commands (S : Mirage_stack.V4) = struct
-  let stack_instance : S.TCPV4.t option ref = ref None
+  module Stack = struct
+    type t = {
+        instance  : S.TCPV4.t;
+        node_ip   : Ipaddr.V4.t;
+        node_port : int
+      }
+  end
 
-  let stack ?(instance = None) () =
-    let instance_option =
-      match instance with
+  let stack_instance : Stack.t option ref = ref None
+
+  let stack ?(stack_option = None) () =
+    let opt =
+      match stack_option with
       | None -> !stack_instance
       | Some instance -> stack_instance := Some instance; !stack_instance
     in
-    Option.get instance_option
+    Option.get opt
 
   let request_state flow =
     let open S.TCPV4 in
@@ -35,15 +43,17 @@ module Commands (S : Mirage_stack.V4) = struct
                  );
                  Lwt.return_unit
 
-  let connect ~node_ip ~node_port =
-    Logs.debug (fun f -> f "pinging %a:%i"  Ipaddr.V4.pp node_ip node_port);
-    S.TCPV4.create_connection (stack ()) (node_ip, node_port)
+  let connect () =
+    let open Stack in
+    match stack () with { instance; node_ip; node_port; } ->
+      Logs.debug (fun f -> f "pinging %a:%i"  Ipaddr.V4.pp node_ip node_port);
+      S.TCPV4.create_connection instance (node_ip, node_port)
 
   let disconnect () =
-    S.TCPV4.disconnect (stack ())
+    S.TCPV4.disconnect Stack.((stack ()).instance)
 
-  let state_ping ~node_ip ~node_port =
-    connect ~node_ip ~node_port
+  let state_ping () =
+    connect ()
     >>= function
     | Error err -> Logs.err (fun f -> f "connection error: %a" S.TCPV4.pp_error err); Lwt.return_unit
     | Ok flow -> request_state flow
