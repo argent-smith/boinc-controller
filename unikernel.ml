@@ -31,8 +31,7 @@ end
 
 module dependency plan
 
-BoincController -> Stack [type stack_info; val connect; val disconnect
-                -> Commands
+BoincController -> Commands
                 -> CommandA
                 -> ...       -> functor Command (CD : CommandData) -> module type CommandData
                 -> CommandZ

@@ -15,7 +15,8 @@ module Commands (S : Mirage_stack.V4) = struct
     >>= (
       function
       | Error err ->
-         Logs.err (fun f -> f "command transmission error: %a" pp_write_error err); Lwt.return_unit
+         Logs.err (fun f -> f "command transmission error: %a" pp_write_error err);
+         TCP.close flow
       | _ -> Lwt.return_unit
     )
     >>= fun () -> read flow
