@@ -1,20 +1,8 @@
 open Lwt.Infix
 
 module Commands (S : Mirage_stack.V4) = struct
-  module Stack = struct
-    type t = {
-        instance  : S.TCPV4.t;
-        node_ip   : Ipaddr.V4.t;
-        node_port : int
-      }
-
-    let connect stack_info =
-      match stack_info with { instance; node_ip; node_port; } ->
-        S.TCPV4.create_connection instance (node_ip, node_port)
-
-    let disconnect stack_info =
-      S.TCPV4.disconnect stack_info.instance
-  end
+  module TCP = S.TCPV4
+  module IP = Ipaddr.V4
 
   let request_state flow =
     let open S.TCPV4 in
@@ -41,5 +29,7 @@ module Commands (S : Mirage_stack.V4) = struct
                  Lwt.return_unit
 
   let state_ping flow =
+    let addr, port = TCP.dst flow in
+    Logs.debug (fun f -> f "pinging %s:%d" (IP.to_string addr) port);
     request_state flow
 end
