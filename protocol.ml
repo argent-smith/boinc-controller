@@ -20,7 +20,8 @@ module Commands (S : Mirage_stack.V4) = struct
     )
     >>= fun () -> read flow
     >>= function | Error err ->
-                    Logs.err (fun f -> f "response receiving error: %a" pp_error err); Lwt.return_unit
+                    Logs.err (fun f -> f "response receiving error: %a" pp_error err);
+                    TCP.close flow
                  | Ok response -> (
                    match response with
                    | `Data payload -> Logs.debug (fun f -> f "node responded with payload:\n%s" (Cstruct.to_string payload))

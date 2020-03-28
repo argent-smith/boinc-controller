@@ -9,16 +9,20 @@ module BoincController (Time : Mirage_time.S) (S : Mirage_stack.V4) = struct
 
   let start _time stack =
     let rec loop () =
-      let tcp = S.tcpv4 stack in
+      let tcp = S.tcpv4 stack
+      and duration = 1 in
       TCP.create_connection tcp (node_ip, node_port)
-      >>= function
-      | Error err -> Logs.err (fun f -> f "connection error: %a" TCP.pp_error err); Lwt.return_unit
-      | Ok flow ->
-         let duration = 1 in
-         C.state_ping flow
-         >>= fun () -> Time.sleep_ns (Duration.of_sec duration)
-         >>= fun () -> TCP.close flow
-         >>= fun () -> loop ()
+      >>= (fun conn_result ->
+        match conn_result with
+        | Error err ->
+           Logs.err (fun f -> f "connection error: %a" TCP.pp_error err);
+           TCP.disconnect tcp
+        | Ok flow ->
+           C.state_ping flow
+           >>= fun () -> TCP.close flow
+      )
+      >>= fun () -> Time.sleep_ns (Duration.of_sec duration)
+      >>= fun () -> loop ()
     in
     Lwt.join [loop ()]
 end
